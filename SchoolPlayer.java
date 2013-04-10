@@ -1,7 +1,6 @@
 package com.csc2013;
 
 import java.util.ArrayList;
-
 import org.newdawn.slick.SlickException;
 
 import com.csc2013.DungeonMaze.BoxType;
@@ -26,7 +25,6 @@ public class SchoolPlayer {
 	 */
 	public SchoolPlayer() throws SlickException {
 		// complete
-		
 	}
 
 	/** 
@@ -42,7 +40,6 @@ public class SchoolPlayer {
 	 * @return Action
 	 */
 	public Action nextMove(final PlayerVision vision, final int keyCount, final boolean lastAction) {
-		
 		return null;
 	}
 }
