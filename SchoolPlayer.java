@@ -20,7 +20,6 @@ import com.sun.tools.javac.util.List;
  *
  */
 public class SchoolPlayer {
-	private ArrayList<Action> moves = new ArrayList<Action>(); // a list of moves to execute
 	private ArrayList<Point>  exits = new ArrayList<Point>(); // holds all of the known exits
 	private ArrayList<Point>  keys  = new ArrayList<Point>(); // holds all of the known keys
 	
@@ -279,15 +278,14 @@ public class SchoolPlayer {
 	 * @return Action
 	 */
 	public Action nextMove(final PlayerVision vision, final int keyCount, final boolean lastAction) {
-		addToMap(east, north, vision.CurrentPoint);
+		if (lastAction == false){
+			System.out.println("WRONG");
+		}
+		addToMap(east, north, vision.CurrentPoint); // add our current point to our map
 		// add everything we can see to our map
 		updateMap(vision);
 		
 		if(vision.CurrentPoint.hasKey()) { // if there is a key on the current spot always pick it up
-			if (moves.get(0) == Action.Pickup){ // if the moves array was already telling us to pick it up, remove that command
-				moves.remove(0);
-			}
-			
 			// remove this key from our array
 			for (int i = 0; i < keys.size(); i++){
 				Point key = keys.get(i);
@@ -321,14 +319,9 @@ public class SchoolPlayer {
 		
 		if (possibleMoves.size() > 0){
 			// we have a way to get to the exit
-			moves = possibleMoves; // save the moves
-			return doNextMove(); // get going
+			return doNextMove(possibleMoves.get(0)); // get going
 		}
 		
-		if (moves.size() > 0){
-			// we are moving to a goal so keep going
-			return doNextMove();
-		}
 		
 		// we don't have a goal and there are no accessible exits. See if there is a key close enough to go pick up
 		ArrayList<Action> movesToKey = new ArrayList<Action>();
@@ -351,40 +344,30 @@ public class SchoolPlayer {
 		
 		if (movesToKey.size() == 0){
 			// there are no reachable keys so go explore
-			moves = movesToUnkown;
-			return doNextMove(); // get going
+			return doNextMove(movesToUnkown.get(0)); // get going
 		}
 		if (movesToKey.size() * keyFactor < movesToUnkown.size()){
 			// the key is significantly closer to the unkown and within our margin so go to it
-			moves = movesToKey;
-			return doNextMove();
+			return doNextMove(movesToKey.get(0));
 		} else {
 			// the key is too far so go explore
-			moves = movesToUnkown;
-			return doNextMove();
+			return doNextMove(movesToUnkown.get(0));
 		}
 	}
 	
 	// executes the next move and correctly updates east and north
-	private Action doNextMove(){
-		if (moves.size() > 0){
-			Action move = moves.remove(0); // remove this move from the list and return it
-			
-			// update east or north
-			if (move == Action.East){
-				east++;
-			} else if (move == Action.West){
-				east--;
-			} else if (move == Action.North){
-				north++;
-			} else if (move == Action.South){
-				north--;
-			}
-			return move;
-		} else {
-			System.out.println("AHHH. There are no moves");
-			return null; // there are no more moves! (This shouldn't ever happen if this method was called...)
+	private Action doNextMove(Action move){
+		// update east or north
+		if (move == Action.East){
+			east++;
+		} else if (move == Action.West){
+			east--;
+		} else if (move == Action.North){
+			north++;
+		} else if (move == Action.South){
+			north--;
 		}
+		return move;
 	}
 	
 	private void updateMap(final PlayerVision vision){
