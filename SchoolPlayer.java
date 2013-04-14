@@ -78,7 +78,7 @@ public class SchoolPlayer {
 	}
 	
 	private int east  = 0;
-	private int south = 0;
+	private int north = 0;
 	
 	private Map map;
 	
@@ -117,26 +117,26 @@ public class SchoolPlayer {
 		for (i = 0; i < vision.mWest; i++){
 			x = -i - east - 1;
 			
-			addToMap(x, south, vision.West[i]);
+			addToMap(x, north, vision.West[i]);
 		}
 		
 		// add everything east to the map
 		for (i = 0; i < vision.mEast; i++){
 			x = i + east + 1;
 			
-			addToMap(x, south, vision.East[i]);
+			addToMap(x, north, vision.East[i]);
 		}
 		
 		// add everything north to the map
 		for (i = 0; i < vision.mNorth; i++){
-			y = -i + south - 1;
+			y = i + north + 1;
 			
 			addToMap(east, y, vision.North[i]);
 		}
 		
 		// add everything south to the map
 		for (i = 0; i < vision.mSouth; i++){
-			y = i + south + 1;
+			y = -i - north - 1;
 			
 			addToMap(east, y, vision.South[i]);
 		}
