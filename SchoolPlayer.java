@@ -1,9 +1,8 @@
 package com.csc2013;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
-import java.util.PriorityQueue;
 
 import org.newdawn.slick.SlickException;
 
@@ -76,7 +75,14 @@ public class SchoolPlayer {
 		}
 		
 		public BoxContainer getElement(int x, int y){
+			if (x - originX < 0 || x - originX >= map.size())
+				return BoxContainer.Unkown;
+			
 			ArrayList<BoxContainer> row = map.get(x - originX);
+			
+			if (y - originY < 0 || y - originY >= row.size())
+				return BoxContainer.Unkown;
+			
 			return row.get(y - originY);
 		}
 		
@@ -123,8 +129,7 @@ public class SchoolPlayer {
 		private ArrayList<Action> recoverPath(SearchNode cur){
 			ArrayList<Action> moves = new ArrayList<Action>();
 			while (cur.cameFrom != null){
-				SearchNode prev = cur.cameFrom;
-				moves.add(0, prev.direction);
+				moves.add(0, cur.direction);
 				
 				BoxContainer curBox = getElement(cur.posX, cur.posY);
 				if (curBox == BoxContainer.Door)
@@ -132,7 +137,7 @@ public class SchoolPlayer {
 				if (curBox == BoxContainer.Key)
 					moves.add(0, Action.Pickup);
 				
-				cur = prev;	
+				cur = cur.cameFrom;	
 			}
 			
 			return moves;
@@ -171,7 +176,7 @@ public class SchoolPlayer {
 					}
 					else if (i == 1){
 						newX = current.posX;
-						newY = current.posY + 1;
+						newY = current.posY - 1;
 						direction = Action.North;
 					}
 					else if (i == 2){
@@ -181,7 +186,7 @@ public class SchoolPlayer {
 					}
 					else{
 						newX = current.posX;
-						newY = current.posY - 1;
+						newY = current.posY + 1;
 						direction = Action.South;
 					}
 					
@@ -197,6 +202,8 @@ public class SchoolPlayer {
 					if (newBox == BoxContainer.Door || newBox == BoxContainer.Key)
 						new_gScore++;
 					
+					
+					//try to find the node if we've already searched it, otherwise create it
 					SearchNode newNode = findNodeWithCoords(visited, newX, newY);
 					if (newNode == null){
 						newNode = findNodeWithCoords(work, newX, newY);
@@ -229,6 +236,20 @@ public class SchoolPlayer {
 			
 			return null;
 		}
+		
+		public void testPathfinding(){
+			map.clear();
+			map.add(new ArrayList<BoxContainer>(Arrays.asList(BoxContainer.Door, BoxContainer.Exit)));
+			map.add(new ArrayList<BoxContainer>(Arrays.asList(BoxContainer.Key, BoxContainer.Blocked)));
+			map.add(new ArrayList<BoxContainer>(Arrays.asList(BoxContainer.Open, BoxContainer.Open)));
+			originX = -2;
+			originY = 0;
+			
+			ArrayList<Action> moves = findShortestPath(0, 0, -2, 1, 0);
+			for (Action move : moves){
+				System.out.println(move.toString());
+			}
+		}
 	}
 	
 	private int east  = 0;
@@ -244,6 +265,8 @@ public class SchoolPlayer {
 	public SchoolPlayer() throws SlickException {
 		// complete
 		map = new Map();
+		Map tempMap = new Map();
+		tempMap.testPathfinding();
 	}
 
 	/** 
