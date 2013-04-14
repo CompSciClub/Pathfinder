@@ -24,6 +24,8 @@ public class SchoolPlayer {
 	private ArrayList<Point>  exits = new ArrayList<Point>(); // holds all of the known exits
 	private ArrayList<Point>  keys  = new ArrayList<Point>(); // holds all of the known keys
 	
+	private int keyFactor = 2; // a number that represents how important keys are
+	
 	public enum BoxContainer{ // our custom BoxType enum that allows for unknowns
 		Open, Blocked, Door, Exit, Key, Unkown;
 	}
@@ -188,8 +190,9 @@ public class SchoolPlayer {
 					if (newBox == BoxContainer.Blocked || (!toUnknown && newBox == BoxContainer.Unkown))
 						continue;
 					
-					if (newBox == BoxContainer.Door && current.keysLeft == 0)
+					if (newBox == BoxContainer.Door && current.keysLeft == 0){
 						continue;
+					}
 					
 					int new_gScore = current.gScore + 1;
 					if (newBox == BoxContainer.Door || newBox == BoxContainer.Key)
@@ -284,12 +287,22 @@ public class SchoolPlayer {
 			if (moves.get(0) == Action.Pickup){ // if the moves array was already telling us to pick it up, remove that command
 				moves.remove(0);
 			}
+			
+			// remove this key from our array
+			for (int i = 0; i < keys.size(); i++){
+				Point key = keys.get(i);
+				if (key.x == east && key.y == north){
+					keys.remove(i);
+					break;
+				}
+			}
  			return Action.Pickup;
 		}
 		
 		// check if there are any accessible exits, and if so go to them
 		ArrayList<Action> possibleMoves = new ArrayList<Action>();
 		if (exits.size() > 0){
+			System.out.println("Found exit");
 			for (int i = 0; i < exits.size(); i++){
 				Point exit = exits.get(i);
 				ArrayList<Action> movesToThisExit = map.findShortestPath(east, north, exit.x, exit.y, keyCount, false);
@@ -307,7 +320,6 @@ public class SchoolPlayer {
 		}
 		
 		if (possibleMoves.size() > 0){
-			System.out.println("Found Exit");
 			// we have a way to get to the exit
 			moves = possibleMoves; // save the moves
 			return doNextMove(); // get going
@@ -318,9 +330,39 @@ public class SchoolPlayer {
 			return doNextMove();
 		}
 		
-		// we don't currently have a goal and there are no accessible exits. Go Explore!
-		moves = map.findShortestPath(east, north, 0, 0, keyCount, true);
-		return doNextMove(); // get going
+		// we don't have a goal and there are no accessible exits. See if there is a key close enough to go pick up
+		ArrayList<Action> movesToKey = new ArrayList<Action>();
+		for (int i = 0; i < keys.size(); i++){
+			Point key = keys.get(i);
+			ArrayList<Action> movesToThisKey = map.findShortestPath(east, north, key.x, key.y, 0, false);
+			if (movesToThisKey != null){
+				// this is a valid way to get to the key
+				if (movesToKey.size() == 0){
+					// this is the first path to a key so for now it's the best one
+					movesToKey = movesToThisKey;
+				} else if (movesToThisKey.size() < movesToKey.size()){
+					// this is shorter than the distance to the last key so use this
+					movesToKey = movesToThisKey;
+				}
+			}
+		}
+		
+		ArrayList<Action> movesToUnkown = map.findShortestPath(east, north, 0, 0, keyCount, true);
+		
+		if (movesToKey.size() == 0){
+			// there are no reachable keys so go explore
+			moves = movesToUnkown;
+			return doNextMove(); // get going
+		}
+		if (movesToKey.size() * keyFactor < movesToUnkown.size()){
+			// the key is significantly closer to the unkown and within our margin so go to it
+			moves = movesToKey;
+			return doNextMove();
+		} else {
+			// the key is too far so go explore
+			moves = movesToUnkown;
+			return doNextMove();
+		}
 	}
 	
 	// executes the next move and correctly updates east and north
