@@ -2,6 +2,7 @@ package com.csc2013;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import org.newdawn.slick.SlickException;
@@ -9,6 +10,7 @@ import org.newdawn.slick.SlickException;
 import com.csc2013.DungeonMaze.BoxType;
 import com.csc2013.DungeonMaze.Action;
 import com.csc2013.DungeonMaze.MoveType;
+import com.sun.tools.javac.util.List;
 
 /**
  * 
@@ -26,7 +28,7 @@ public class SchoolPlayer {
 		Open, Blocked, Door, Exit, Key, Unkown;
 	}
 	
-	// Holds information about a specifid point. Inluding its x,y position relative to our origin and its BoxContainer type
+	// Holds information about a specifid point. Including its x,y position relative to our origin and its BoxContainer type
 	public class Point {
 		public int x;
 		public int y;
@@ -39,7 +41,8 @@ public class SchoolPlayer {
 	}
 	
 	public class Map{
-		private ArrayList<ArrayList<BoxContainer>> map = new ArrayList<ArrayList<BoxContainer>>();
+		//private ArrayList<ArrayList<BoxContainer>> map = new ArrayList<ArrayList<BoxContainer>>();
+		private HashMap<ArrayList<Integer>, BoxContainer> map = new HashMap();
 		
 		private int originX = 0;
 		private int originY = 0;
@@ -50,7 +53,11 @@ public class SchoolPlayer {
 		}
 		
 		public void addElement(int x, int y, BoxContainer element){
-			int i;
+			ArrayList<Integer> coordinates = new ArrayList<Integer>();
+			coordinates.add(x);
+			coordinates.add(y);
+			map.put(coordinates, element);
+			/*int i;
 			
 			// correct for the offset
 			int realX = x - originX;
@@ -86,11 +93,20 @@ public class SchoolPlayer {
 					col.add(BoxContainer.Unkown);
 				}
 			}
-			col.set(realY, element);
+			col.set(realY, element);*/
 		}
 		
 		public BoxContainer getElement(int x, int y){
-			if (x - originX < 0 || x - originX >= map.size())
+			ArrayList<Integer> coordinates = new ArrayList<Integer>();
+			coordinates.add(x);
+			coordinates.add(y);
+			BoxContainer point = map.get(coordinates);
+			if (point == null){
+				return BoxContainer.Unkown;
+			} else {
+				return point;
+			}
+			/*if (x - originX < 0 || x - originX >= map.size())
 				return BoxContainer.Unkown;
 			
 			ArrayList<BoxContainer> row = map.get(x - originX);
@@ -98,7 +114,7 @@ public class SchoolPlayer {
 			if (y - originY < 0 || y - originY >= row.size())
 				return BoxContainer.Unkown;
 			
-			return row.get(y - originY);
+			return row.get(y - originY);*/
 		}
 		
 		private class SearchNode{
@@ -182,6 +198,7 @@ public class SchoolPlayer {
 				}
 				
 				if (toUnknown && getElement(current.posX, current.posY) == BoxContainer.Unkown){
+					System.out.println("Found path to unkown " + current.posX + ", " + current.posY + " " + getElement(current.posX, current.posY));
 					return recoverPath(current);
 				}
 				
@@ -262,7 +279,7 @@ public class SchoolPlayer {
 			return null;
 		}
 		
-		public void testPathfinding(){
+		/*public void testPathfinding(){
 			map.clear();
 			map.add(new ArrayList<BoxContainer>(Arrays.asList(BoxContainer.Door, BoxContainer.Exit)));
 			map.add(new ArrayList<BoxContainer>(Arrays.asList(BoxContainer.Key, BoxContainer.Blocked)));
@@ -274,7 +291,7 @@ public class SchoolPlayer {
 			for (Action move : moves){
 				System.out.println(move.toString());
 			}
-		}
+		}*/
 	}
 	
 	private int east  = 0;
@@ -305,6 +322,7 @@ public class SchoolPlayer {
 	 * @return Action
 	 */
 	public Action nextMove(final PlayerVision vision, final int keyCount, final boolean lastAction) {
+		addToMap(east, north, vision.CurrentPoint);
 		// add everything we can see to our map
 		updateMap(vision);
 		
@@ -316,7 +334,7 @@ public class SchoolPlayer {
 		}
 		
 		// check if there are any accessible exits, and if so go to them
-		ArrayList<Action> possibleMoves = new ArrayList();
+		ArrayList<Action> possibleMoves = new ArrayList<Action>();
 		if (exits.size() > 0){
 			for (int i = 0; i < exits.size(); i++){
 				Point exit = exits.get(i);
@@ -333,6 +351,7 @@ public class SchoolPlayer {
 		}
 		
 		if (possibleMoves.size() > 0){
+			System.out.println("Found Exit");
 			// we have a way to get to the exit
 			moves = possibleMoves; // save the moves
 			return doNextMove(); // get going
@@ -365,6 +384,7 @@ public class SchoolPlayer {
 			}
 			return move;
 		} else {
+			System.out.println("AHHH. There are no moves");
 			return null; // there are no more moves! (This shouldn't ever happen if this method was called...)
 		}
 	}
