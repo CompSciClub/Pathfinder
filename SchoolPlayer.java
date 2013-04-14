@@ -135,7 +135,7 @@ public class SchoolPlayer {
 				if (curBox == BoxContainer.Door)
 					moves.add(0, Action.Use);
 				if (curBox == BoxContainer.Key)
-					moves.add(0, Action.Pickup);
+					moves.add(1, Action.Pickup);
 				
 				cur = cur.cameFrom;	
 			}
