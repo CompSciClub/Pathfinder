@@ -143,7 +143,7 @@ public class SchoolPlayer {
 			return moves;
 		}
 		
-		public ArrayList<Action> findShortestPath(int startX, int startY, int endX, int endY, int numKeys){
+		public ArrayList<Action> findShortestPath(int startX, int startY, int endX, int endY, int numKeys, boolean toUnknown){
 			HashSet<SearchNode> visited = new HashSet<SearchNode>();
 			HashSet<SearchNode> work = new HashSet<SearchNode>();
 			
@@ -151,15 +151,22 @@ public class SchoolPlayer {
 			start.posX = startX;
 			start.posY = startY;
 			start.gScore = 0;
-			start.fScore = Math.abs(startX - endX) + Math.abs(startY - endY);
+			if (toUnknown)
+				start.fScore = 0;
+			else
+				start.fScore = Math.abs(startX - endX) + Math.abs(startY - endY);
 			start.keysLeft = numKeys;
 			start.cameFrom = null;
 			work.add(start);
 			
 			while(work.size() > 0){
 				SearchNode current = findFirstNode(work);
-				if (current.posX == endX && current.posY == endY){
+				if (!toUnknown && current.posX == endX && current.posY == endY){
 					//We've found the end node, reconstruct the path
+					return recoverPath(current);
+				}
+				
+				if (toUnknown && getElement(current.posX, current.posY) == BoxContainer.Unkown){
 					return recoverPath(current);
 				}
 				
@@ -192,7 +199,7 @@ public class SchoolPlayer {
 					
 					//Check to make sure we can move into this node
 					BoxContainer newBox = getElement(newX, newY);
-					if (newBox == BoxContainer.Blocked || newBox == BoxContainer.Unkown)
+					if (newBox == BoxContainer.Blocked || (!toUnknown && newBox == BoxContainer.Unkown))
 						continue;
 					
 					if (newBox == BoxContainer.Door && current.keysLeft == 0)
@@ -222,7 +229,10 @@ public class SchoolPlayer {
 						newNode.cameFrom = current;
 						newNode.direction = direction;
 						newNode.gScore = new_gScore;
-						newNode.fScore = newNode.gScore + Math.abs(newNode.posX - endX) + Math.abs(newNode.posY - endY);
+						if (toUnknown)
+							newNode.fScore = newNode.gScore;
+						else
+							newNode.fScore = newNode.gScore + Math.abs(newNode.posX - endX) + Math.abs(newNode.posY - endY);
 						newNode.keysLeft = current.keysLeft;
 						if (newBox == BoxContainer.Door)
 							newNode.keysLeft--;
@@ -245,7 +255,7 @@ public class SchoolPlayer {
 			originX = -2;
 			originY = 0;
 			
-			ArrayList<Action> moves = findShortestPath(0, 0, -2, 1, 0);
+			ArrayList<Action> moves = findShortestPath(-1, 0, -2, 1, 0, false);
 			for (Action move : moves){
 				System.out.println(move.toString());
 			}
