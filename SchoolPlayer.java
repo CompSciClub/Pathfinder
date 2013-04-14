@@ -32,11 +32,6 @@ public class SchoolPlayer {
 		}
 		
 		public void addElement(int x, int y, BoxContainer element){
-			if(x == 0){
-				if (y == 0){
-					System.out.println("Adding origin");
-				}
-			}
 			int i;
 			
 			// correct for the offset
@@ -111,8 +106,8 @@ public class SchoolPlayer {
 	 */
 	public Action nextMove(final PlayerVision vision, final int keyCount, final boolean lastAction) {
 		updateMap(vision);
-		east--;
-		return Action.West;
+		east++;
+		return Action.East;
 	}
 	
 	private void updateMap(final PlayerVision vision){
@@ -163,6 +158,31 @@ public class SchoolPlayer {
 		// add it to the map
 		
 		map.addElement(x, y, type);
+		
+		// add its surrondings to the map
+		map.addElement(x, y - 1, castToBoxContainer(piece.North));
+		map.addElement(x, y + 1, castToBoxContainer(piece.South));
+		map.addElement(x - 1, y, castToBoxContainer(piece.West));
+		map.addElement(x + 1, y, castToBoxContainer(piece.East));
+	}
 	
+	private BoxContainer castToBoxContainer(BoxType boxType){
+		if (boxType == BoxType.Blocked){
+			return BoxContainer.Blocked;
+		}
+		if (boxType == BoxType.Door){
+			return BoxContainer.Door;
+		}
+		if (boxType == BoxType.Exit){
+			return BoxContainer.Exit;
+		}
+		if (boxType == BoxType.Key){
+			return BoxContainer.Key;
+		}
+		if (boxType == BoxType.Open){
+			return BoxContainer.Open;
+		}
+		return BoxContainer.Unkown;
+		
 	}
 }
