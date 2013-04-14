@@ -16,7 +16,7 @@ import com.csc2013.DungeonMaze.MoveType;
  */
 public class SchoolPlayer {
 	
-	public enum BoxContainer{ // our custom BoxType class that allows for unknowns
+	public enum BoxContainer{ // our custom BoxType enum that allows for unknowns
 		Open, Blocked, Door, Exit, Key, Unkown;
 	}
 	
@@ -32,8 +32,12 @@ public class SchoolPlayer {
 		}
 		
 		public void addElement(int x, int y, BoxContainer element){
+			if(x == 0){
+				if (y == 0){
+					System.out.println("Adding origin");
+				}
+			}
 			int i;
-			
 			
 			// correct for the offset
 			int realX = x - originX;
@@ -43,11 +47,18 @@ public class SchoolPlayer {
 				// this is furthest the point to the left that we've seen. It's the new originX
 				originX = x;
 				realX   = 0;
+				map.add(0, new ArrayList<BoxContainer>());
 			}
 			if (realY < 0){
 				// this is furthest the point up that we've seen. It's the new originY
 				originY = y;
 				realY   = 0;
+				
+				// bump every piece down one on the y axis
+				for (i = 0; i < map.size(); i++){
+					ArrayList<BoxContainer> col = map.get(i);
+					col.add(0, BoxContainer.Unkown);
+				}
 			}
 			
 			if (realX >= map.size()){
@@ -56,15 +67,13 @@ public class SchoolPlayer {
 				}
 			}
 			
-			ArrayList<BoxContainer> row = map.get(realX);
-			if (realY >= row.size()){
-				for (i = row.size(); i < realY + 1; i++){
-					row.add(BoxContainer.Unkown);
+			ArrayList<BoxContainer> col = map.get(realX);
+			if (realY >= col.size()){
+				for (i = col.size(); i < realY + 1; i++){
+					col.add(BoxContainer.Unkown);
 				}
-				row.set(realY, element);
-			} else {
-				row.add(realY, element);
 			}
+			col.set(realY, element);
 		}
 		
 		public BoxContainer getElement(int x, int y){
@@ -102,37 +111,37 @@ public class SchoolPlayer {
 	 */
 	public Action nextMove(final PlayerVision vision, final int keyCount, final boolean lastAction) {
 		updateMap(vision);
-		south++;
-		return Action.South;
+		east--;
+		return Action.West;
 	}
 	
 	private void updateMap(final PlayerVision vision){
-		int i;
+		int i, y, x;
 		
 		// add everything west to the map
 		for (i = 0; i < vision.mWest; i++){
-			int x = -i - east - 1;
+			x = -i - east - 1;
 			
 			addToMap(x, south, vision.West[i]);
 		}
 		
 		// add everything east to the map
 		for (i = 0; i < vision.mEast; i++){
-			int x = i + east + 1;
+			x = i + east + 1;
 			
 			addToMap(x, south, vision.East[i]);
 		}
 		
 		// add everything north to the map
 		for (i = 0; i < vision.mNorth; i++){
-			int y = -i - south - 1;
+			y = -i + south - 1;
 			
 			addToMap(east, y, vision.North[i]);
 		}
 		
 		// add everything south to the map
 		for (i = 0; i < vision.mSouth; i++){
-			int y = i + south + 1;
+			y = i + south + 1;
 			
 			addToMap(east, y, vision.South[i]);
 		}
