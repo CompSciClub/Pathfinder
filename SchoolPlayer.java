@@ -57,43 +57,6 @@ public class SchoolPlayer {
 			coordinates.add(x);
 			coordinates.add(y);
 			map.put(coordinates, element);
-			/*int i;
-			
-			// correct for the offset
-			int realX = x - originX;
-			int realY = y - originY;
-			
-			if (realX < 0){
-				// this is furthest the point to the left that we've seen. It's the new originX
-				originX = x;
-				realX   = 0;
-				map.add(0, new ArrayList<BoxContainer>());
-			}
-			if (realY < 0){
-				// this is furthest the point up that we've seen. It's the new originY
-				originY = y;
-				realY   = 0;
-				
-				// bump every piece down one on the y axis
-				for (i = 0; i < map.size(); i++){
-					ArrayList<BoxContainer> col = map.get(i);
-					col.add(0, BoxContainer.Unkown);
-				}
-			}
-			
-			if (realX >= map.size()){
-				for (i = map.size(); i < realX + 1; i++){
-					map.add(new ArrayList<BoxContainer>());
-				}
-			}
-			
-			ArrayList<BoxContainer> col = map.get(realX);
-			if (realY >= col.size()){
-				for (i = col.size(); i < realY + 1; i++){
-					col.add(BoxContainer.Unkown);
-				}
-			}
-			col.set(realY, element);*/
 		}
 		
 		public BoxContainer getElement(int x, int y){
@@ -106,15 +69,6 @@ public class SchoolPlayer {
 			} else {
 				return point;
 			}
-			/*if (x - originX < 0 || x - originX >= map.size())
-				return BoxContainer.Unkown;
-			
-			ArrayList<BoxContainer> row = map.get(x - originX);
-			
-			if (y - originY < 0 || y - originY >= row.size())
-				return BoxContainer.Unkown;
-			
-			return row.get(y - originY);*/
 		}
 		
 		private class SearchNode{
