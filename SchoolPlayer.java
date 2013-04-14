@@ -1,6 +1,10 @@
 package com.csc2013;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.PriorityQueue;
+
 import org.newdawn.slick.SlickException;
 
 import com.csc2013.DungeonMaze.BoxType;
@@ -74,6 +78,156 @@ public class SchoolPlayer {
 		public BoxContainer getElement(int x, int y){
 			ArrayList<BoxContainer> row = map.get(x - originX);
 			return row.get(y - originY);
+		}
+		
+		private class SearchNode{
+			public int posX, posY;
+			public int gScore, fScore;
+			public int keysLeft;
+			public SearchNode cameFrom;
+			public Action direction;
+			
+			@Override
+			public boolean equals(Object _other){
+				if (_other == this) return true;
+				if (!(_other instanceof SearchNode)) return false;
+				
+				SearchNode other = (SearchNode)_other;
+				return other.posX == posX && other.posY == posY;
+			}
+			
+			@Override
+			public int hashCode(){
+				return posX * 100000 + posY;
+			}
+		}
+		
+		//We need to do this each time because the fScore may change
+		private SearchNode findFirstNode(HashSet<SearchNode> set){
+			SearchNode min = null;
+			for (SearchNode cur : set){
+				if (min == null || cur.fScore < min.fScore)
+					min = cur;
+			}
+			return min;
+		}
+		
+		private SearchNode findNodeWithCoords(HashSet<SearchNode> set, int x, int y){
+			for (SearchNode cur : set){
+				if (cur.posX == x && cur.posY == y)
+					return cur;
+			}
+			return null;
+		}
+		
+		private ArrayList<Action> recoverPath(SearchNode cur){
+			ArrayList<Action> moves = new ArrayList<Action>();
+			while (cur.cameFrom != null){
+				SearchNode prev = cur.cameFrom;
+				moves.add(0, prev.direction);
+				
+				BoxContainer curBox = getElement(cur.posX, cur.posY);
+				if (curBox == BoxContainer.Door)
+					moves.add(0, Action.Use);
+				if (curBox == BoxContainer.Key)
+					moves.add(0, Action.Pickup);
+				
+				cur = prev;	
+			}
+			
+			return moves;
+		}
+		
+		public ArrayList<Action> findShortestPath(int startX, int startY, int endX, int endY, int numKeys){
+			HashSet<SearchNode> visited = new HashSet<SearchNode>();
+			HashSet<SearchNode> work = new HashSet<SearchNode>();
+			
+			SearchNode start = new SearchNode();
+			start.posX = startX;
+			start.posY = startY;
+			start.gScore = 0;
+			start.fScore = Math.abs(startX - endX) + Math.abs(startY - endY);
+			start.keysLeft = numKeys;
+			start.cameFrom = null;
+			work.add(start);
+			
+			while(work.size() > 0){
+				SearchNode current = findFirstNode(work);
+				if (current.posX == endX && current.posY == endY){
+					//We've found the end node, reconstruct the path
+					return recoverPath(current);
+				}
+				
+				work.remove(current);
+				visited.add(current);
+				
+				for (int i = 0; i < 4; i++){
+					int newX, newY;
+					Action direction;
+					if (i == 0){
+						newX = current.posX + 1;
+						newY = current.posY;
+						direction = Action.East;
+					}
+					else if (i == 1){
+						newX = current.posX;
+						newY = current.posY + 1;
+						direction = Action.North;
+					}
+					else if (i == 2){
+						newX = current.posX - 1;
+						newY = current.posY;
+						direction = Action.West;
+					}
+					else{
+						newX = current.posX;
+						newY = current.posY - 1;
+						direction = Action.South;
+					}
+					
+					//Check to make sure we can move into this node
+					BoxContainer newBox = getElement(newX, newY);
+					if (newBox == BoxContainer.Blocked || newBox == BoxContainer.Unkown)
+						continue;
+					
+					if (newBox == BoxContainer.Door && current.keysLeft == 0)
+						continue;
+					
+					int new_gScore = current.gScore + 1;
+					if (newBox == BoxContainer.Door || newBox == BoxContainer.Key)
+						new_gScore++;
+					
+					SearchNode newNode = findNodeWithCoords(visited, newX, newY);
+					if (newNode == null){
+						newNode = findNodeWithCoords(work, newX, newY);
+						if (newNode == null)
+						{
+							newNode = new SearchNode();
+							newNode.posX = newX;
+							newNode.posY = newY;
+						}
+					}
+					
+					if (visited.contains(newNode) && new_gScore >= newNode.gScore)
+						continue;
+					
+					if (!work.contains(newNode) || new_gScore < newNode.gScore){
+						newNode.cameFrom = current;
+						newNode.direction = direction;
+						newNode.gScore = new_gScore;
+						newNode.fScore = newNode.gScore + Math.abs(newNode.posX - endX) + Math.abs(newNode.posY - endY);
+						newNode.keysLeft = current.keysLeft;
+						if (newBox == BoxContainer.Door)
+							newNode.keysLeft--;
+						if (newBox == BoxContainer.Key)
+							newNode.keysLeft++;
+						if (!work.contains(newNode))
+							work.add(newNode);
+					}
+				}
+			}
+			
+			return null;
 		}
 	}
 	
