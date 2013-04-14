@@ -18,9 +18,24 @@ import com.csc2013.DungeonMaze.MoveType;
  *
  */
 public class SchoolPlayer {
+	private ArrayList<Action> moves = new ArrayList(); // a list of moves to execute
+	private ArrayList<Point>  exits = new ArrayList(); // holds all of the known exits
+	private ArrayList<Point>  keys  = new ArrayList(); // holds all of the known keys
 	
 	public enum BoxContainer{ // our custom BoxType enum that allows for unknowns
 		Open, Blocked, Door, Exit, Key, Unkown;
+	}
+	
+	// Holds information about a specifid point. Inluding its x,y position relative to our origin and its BoxContainer type
+	public class Point {
+		public int x;
+		public int y;
+		public BoxContainer type;
+		public Point(int x, int y, BoxContainer type){
+			this.x    = x;
+			this.y    = y;
+			this.type = type;
+		}
 	}
 	
 	public class Map{
@@ -275,8 +290,6 @@ public class SchoolPlayer {
 	public SchoolPlayer() throws SlickException {
 		// complete
 		map = new Map();
-		Map tempMap = new Map();
-		tempMap.testPathfinding();
 	}
 
 	/** 
@@ -292,9 +305,68 @@ public class SchoolPlayer {
 	 * @return Action
 	 */
 	public Action nextMove(final PlayerVision vision, final int keyCount, final boolean lastAction) {
+		// add everything we can see to our map
 		updateMap(vision);
-		east++;
-		return Action.East;
+		
+		if(vision.CurrentPoint.hasKey()) { // if there is a key on the current spot always pick it up
+			if (moves.get(0) == Action.Pickup){ // if the moves array was already telling us to pick it up, remove that command
+				moves.remove(0);
+			}
+ 			return Action.Pickup;
+		}
+		
+		// check if there are any accessible exits, and if so go to them
+		ArrayList<Action> possibleMoves = new ArrayList();
+		if (exits.size() > 0){
+			for (int i = 0; i < exits.size(); i++){
+				Point exit = exits.get(i);
+				ArrayList<Action> movesToThisExit = map.findShortestPath(east, north, exit.x, exit.y, keyCount, false);
+				if (movesToThisExit != null){
+					// this is a valid way to get to the exit!
+					
+					// make sure it's shorter than any previously found exit
+					if (movesToThisExit.size() < possibleMoves.size()){
+						possibleMoves = movesToThisExit;
+					}
+				}
+			}
+		}
+		
+		if (possibleMoves.size() > 0){
+			// we have a way to get to the exit
+			moves = possibleMoves; // save the moves
+			return doNextMove(); // get going
+		}
+		
+		if (moves.size() > 0){
+			// we are moving to a goal so keep going
+			return doNextMove();
+		}
+		
+		// we don't currently have a goal and there are no accessible exits. Go Explore!
+		moves = map.findShortestPath(east, north, 0, 0, keyCount, true);
+		return doNextMove(); // get going
+	}
+	
+	// executes the next move and correctly updates east and north
+	private Action doNextMove(){
+		if (moves.size() > 0){
+			Action move = moves.remove(0); // remove this move from the list and return it
+			
+			// update east or north
+			if (move == Action.East){
+				east++;
+			} else if (move == Action.West){
+				east--;
+			} else if (move == Action.North){
+				north++;
+			} else if (move == Action.South){
+				north--;
+			}
+			return move;
+		} else {
+			return null; // there are no more moves! (This shouldn't ever happen if this method was called...)
+		}
 	}
 	
 	private void updateMap(final PlayerVision vision){
@@ -338,19 +410,54 @@ public class SchoolPlayer {
 		
 		if (piece.hasKey()){
 			type = BoxContainer.Key;
+			Point thisPoint = new Point(x, y, BoxContainer.Key);
+			if (!checkForPointInArr(keys, thisPoint)){ // make sure it's not already in the array
+				keys.add(thisPoint); // add this to our key array
+			}
 		} else if (piece.isEnd()){
 			type = BoxContainer.Exit;
+			Point thisPoint = new Point(x, y, BoxContainer.Exit);
+			if (!checkForPointInArr(exits, thisPoint)){ // make sure it's not already in the array
+				exits.add(new Point(x, y, BoxContainer.Exit)); // add this to our exit array
+			}
 		}
 		
 		// add it to the map
 		
 		map.addElement(x, y, type);
 		
-		// add its surrondings to the map
-		map.addElement(x, y - 1, castToBoxContainer(piece.North));
-		map.addElement(x, y + 1, castToBoxContainer(piece.South));
-		map.addElement(x - 1, y, castToBoxContainer(piece.West));
-		map.addElement(x + 1, y, castToBoxContainer(piece.East));
+		// add its surroundings to the map
+		Point[] surrondings = new Point[4];
+		
+		surrondings[0] = new Point(x, y + 1, castToBoxContainer(piece.North)); // add the north piece
+		surrondings[1] = new Point(x, y - 1, castToBoxContainer(piece.South)); // add the south piece
+		surrondings[2] = new Point(x + 1, y, castToBoxContainer(piece.East)); // add the east piece
+		surrondings[3] = new Point(x - 1, y, castToBoxContainer(piece.West)); // add the west piece
+		
+		for (int i = 0; i < surrondings.length; i++){
+			// check if this is a key or an exit and if so add it to the respective arrays if it not already there
+			if (surrondings[i].type == BoxContainer.Exit){
+				if (!checkForPointInArr(exits, surrondings[i])){ // make sure it's not already there
+					exits.add(surrondings[i]);
+				}
+			} else if (surrondings[i].type == BoxContainer.Key){
+				if (!checkForPointInArr(keys, surrondings[i])){ // make sure it's not already there
+					keys.add(surrondings[i]);
+				}
+			}
+			map.addElement(surrondings[i].x, surrondings[i].y, surrondings[i].type);
+		}
+	}
+	
+	// Checks for a given point in the given array of points. Returns true if it exists otherwise it returns false.
+	private boolean checkForPointInArr(ArrayList<Point> array, Point point){
+		for (int i = 0; i < array.size(); i++){
+			Point checkPoint = array.get(i);
+			if (array.get(i).x == point.x && array.get(i).y == point.y){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private BoxContainer castToBoxContainer(BoxType boxType){
