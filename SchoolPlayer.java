@@ -20,9 +20,9 @@ import com.sun.tools.javac.util.List;
  *
  */
 public class SchoolPlayer {
-	private ArrayList<Action> moves = new ArrayList(); // a list of moves to execute
-	private ArrayList<Point>  exits = new ArrayList(); // holds all of the known exits
-	private ArrayList<Point>  keys  = new ArrayList(); // holds all of the known keys
+	private ArrayList<Action> moves = new ArrayList<Action>(); // a list of moves to execute
+	private ArrayList<Point>  exits = new ArrayList<Point>(); // holds all of the known exits
+	private ArrayList<Point>  keys  = new ArrayList<Point>(); // holds all of the known keys
 	
 	public enum BoxContainer{ // our custom BoxType enum that allows for unknowns
 		Open, Blocked, Door, Exit, Key, Unkown;
@@ -215,7 +215,7 @@ public class SchoolPlayer {
 					}
 					else if (i == 1){
 						newX = current.posX;
-						newY = current.posY - 1;
+						newY = current.posY + 1;
 						direction = Action.North;
 					}
 					else if (i == 2){
@@ -225,7 +225,7 @@ public class SchoolPlayer {
 					}
 					else{
 						newX = current.posX;
-						newY = current.posY + 1;
+						newY = current.posY - 1;
 						direction = Action.South;
 					}
 					
@@ -392,30 +392,33 @@ public class SchoolPlayer {
 	private void updateMap(final PlayerVision vision){
 		int i, y, x;
 		
+		// add the current point to the map
+		addToMap(east, north, vision.CurrentPoint);
+		
 		// add everything west to the map
 		for (i = 0; i < vision.mWest; i++){
-			x = -i - east - 1;
+			x = east - i - 1;
 			
 			addToMap(x, north, vision.West[i]);
 		}
 		
 		// add everything east to the map
 		for (i = 0; i < vision.mEast; i++){
-			x = i + east + 1;
+			x = east + i + 1;
 			
 			addToMap(x, north, vision.East[i]);
 		}
 		
 		// add everything north to the map
 		for (i = 0; i < vision.mNorth; i++){
-			y = i + north + 1;
+			y = north + i + 1;
 			
 			addToMap(east, y, vision.North[i]);
 		}
 		
 		// add everything south to the map
 		for (i = 0; i < vision.mSouth; i++){
-			y = -i - north - 1;
+			y = north - i - 1;
 			
 			addToMap(east, y, vision.South[i]);
 		}
