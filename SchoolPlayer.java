@@ -21,7 +21,7 @@ public class SchoolPlayer {
 	}
 	
 	public class Map{
-		private ArrayList<ArrayList> map = new ArrayList();
+		private ArrayList<ArrayList<BoxContainer>> map = new ArrayList<ArrayList<BoxContainer>>();
 		
 		private int originX = 0;
 		private int originY = 0;
