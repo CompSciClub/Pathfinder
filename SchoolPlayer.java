@@ -342,8 +342,10 @@ public class SchoolPlayer {
 				if (movesToThisExit != null){
 					// this is a valid way to get to the exit!
 					
-					// make sure it's shorter than any previously found exit
-					if (movesToThisExit.size() < possibleMoves.size()){
+					if (possibleMoves.size() == 0){
+						// this is the first path we've found to an exit so currently it's the best one
+						possibleMoves = movesToThisExit;
+					} else if (movesToThisExit.size() < possibleMoves.size()){ // there is another exit path so make sure this one is shorter
 						possibleMoves = movesToThisExit;
 					}
 				}
