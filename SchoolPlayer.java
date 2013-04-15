@@ -16,7 +16,7 @@ import com.sun.tools.javac.util.List;
  * 
  * Has been completed by students
  * 
- * @author Hopkins School
+ * @author Hopkins School / The Fighting Mongooses
  *
  */
 public class SchoolPlayer {
@@ -316,6 +316,8 @@ public class SchoolPlayer {
 		if (lastAction == false){
 			System.out.println("WRONG"); // we messed up :(
 		}
+		
+		System.out.println("Vision: " + vision.mWest);
 
 		// add everything we can see to our map
 		updateMap(vision);
