@@ -14,12 +14,13 @@ import com.sun.tools.javac.util.List;
 
 /**
  * 
- * [To be completed by students]
+ * Has been completed by students
  * 
- * @author [School/Team Name]
+ * @author Hopkins School
  *
  */
 public class SchoolPlayer {
+	// array lists that will hold known points of interest
 	private ArrayList<Point>  exits = new ArrayList<Point>(); // holds all of the known exits
 	private ArrayList<Point>  keys  = new ArrayList<Point>(); // holds all of the known keys
 	
@@ -41,18 +42,24 @@ public class SchoolPlayer {
 		}
 	}
 	
+	/*
+	 * This class holds all the information that we see about the world around us
+	 * All points are defined relative to the origin which is located wherever our guy begins his journey
+	 */
 	public class Map{
-		//private ArrayList<ArrayList<BoxContainer>> map = new ArrayList<ArrayList<BoxContainer>>();
+		// The HashMap that actually contains all the map information
 		private HashMap<ArrayList<Integer>, BoxContainer> map = new HashMap();
-		
-		private int originX = 0;
-		private int originY = 0;
 		
 		// constructor
 		public Map(){
 		
 		}
-		
+		/**
+		 * Adds elements to our map
+		 * @param x the element's x coordinate
+		 * @param y the element's y coordinate
+		 * @param element specifies what type of Box is located here. Open, Door, Key, etc...
+		 */
 		public void addElement(int x, int y, BoxContainer element){
 			ArrayList<Integer> coordinates = new ArrayList<Integer>();
 			coordinates.add(x);
@@ -60,6 +67,12 @@ public class SchoolPlayer {
 			map.put(coordinates, element);
 		}
 		
+		/**
+		 * Gets an element from our map
+		 * @param x The element's x coordinate
+		 * @param y The element's y coordinate
+		 * @return The element you were looking for
+		 */
 		public BoxContainer getElement(int x, int y){
 			ArrayList<Integer> coordinates = new ArrayList<Integer>();
 			coordinates.add(x);
@@ -72,6 +85,11 @@ public class SchoolPlayer {
 			}
 		}
 		
+		/**
+		 * 
+		 * Holds relevant information about a piece for use while performing an A* search
+		 *
+		 */
 		private class SearchNode{
 			public int posX, posY;
 			public int gScore, fScore;
@@ -94,6 +112,12 @@ public class SchoolPlayer {
 			}
 		}
 		
+		/**
+		 * Finds the first node for our search
+		 * @param set the set to search through
+		 * @return The first node
+		 */
+		
 		//We need to do this each time because the fScore may change
 		private SearchNode findFirstNode(HashSet<SearchNode> set){
 			SearchNode min = null;
@@ -104,6 +128,13 @@ public class SchoolPlayer {
 			return min;
 		}
 		
+		/**
+		 * Finds a node in the set given the specified coordinates
+		 * @param set The set to search through
+		 * @param x The x position of the node
+		 * @param y The y position of the node
+		 * @return The node
+		 */
 		private SearchNode findNodeWithCoords(HashSet<SearchNode> set, int x, int y){
 			for (SearchNode cur : set){
 				if (cur.posX == x && cur.posY == y)
@@ -111,6 +142,12 @@ public class SchoolPlayer {
 			}
 			return null;
 		}
+		
+		/**
+		 * Recovers the path used to get to this node and returns it as a list of actions
+		 * @param cur The node we ended up at
+		 * @return A list of actions that represent the shortest path to this node
+		 */
 		
 		private ArrayList<Action> recoverPath(SearchNode cur){
 			ArrayList<Action> moves = new ArrayList<Action>();
@@ -128,6 +165,17 @@ public class SchoolPlayer {
 			
 			return moves;
 		}
+		
+		/**
+		 * Finds the shortest path from the start position to the end position based on our implementation of the A* algorithm
+		 * @param startX The x position to start from
+		 * @param startY The y position to start from
+		 * @param endX The x position to end at (this value does not matter if isUnkown == true)
+		 * @param endY The y position to end at (this value does not matter if isUnkown == true)
+		 * @param numKeys The number of keys available at the beginning of the path
+		 * @param toUnknown If this is true than the algorithm will find the distance to the nearest unknown point rather than the point specified by endX and endY
+		 * @return A list of actions that represent the shortest path to this point
+		 */
 		
 		public ArrayList<Action> findShortestPath(int startX, int startY, int endX, int endY, int numKeys, boolean toUnknown){
 			HashSet<SearchNode> visited = new HashSet<SearchNode>();
@@ -153,7 +201,6 @@ public class SchoolPlayer {
 				}
 				
 				if (toUnknown && getElement(current.posX, current.posY) == BoxContainer.Unkown){
-					System.out.println("Found path to unkown " + current.posX + ", " + current.posY + " " + getElement(current.posX, current.posY));
 					return recoverPath(current);
 				}
 				
@@ -234,22 +281,9 @@ public class SchoolPlayer {
 			
 			return null;
 		}
-		
-		/*public void testPathfinding(){
-			map.clear();
-			map.add(new ArrayList<BoxContainer>(Arrays.asList(BoxContainer.Door, BoxContainer.Exit)));
-			map.add(new ArrayList<BoxContainer>(Arrays.asList(BoxContainer.Key, BoxContainer.Blocked)));
-			map.add(new ArrayList<BoxContainer>(Arrays.asList(BoxContainer.Open, BoxContainer.Open)));
-			originX = -2;
-			originY = 0;
-			
-			ArrayList<Action> moves = findShortestPath(-1, 0, -2, 1, 0, false);
-			for (Action move : moves){
-				System.out.println(move.toString());
-			}
-		}*/
 	}
 	
+	// These represent how we have moved from our starting position (the origin)
 	private int east  = 0;
 	private int north = 0;
 	
@@ -279,14 +313,14 @@ public class SchoolPlayer {
 	 */
 	public Action nextMove(final PlayerVision vision, final int keyCount, final boolean lastAction) {
 		if (lastAction == false){
-			System.out.println("WRONG");
+			System.out.println("WRONG"); // we messed up :(
 		}
 
 		// add everything we can see to our map
 		updateMap(vision);
 		
 		if(vision.CurrentPoint.hasKey()) { // if there is a key on the current spot always pick it up
-			// remove this key from our array
+			// remove this key from our array of keys
 			for (int i = 0; i < keys.size(); i++){
 				Point key = keys.get(i);
 				if (key.x == east && key.y == north){
@@ -300,7 +334,7 @@ public class SchoolPlayer {
 		// check if there are any accessible exits, and if so go to them
 		ArrayList<Action> possibleMoves = new ArrayList<Action>();
 		if (exits.size() > 0){
-			System.out.println("Found exit");
+			// we know of exits!
 			for (int i = 0; i < exits.size(); i++){
 				Point exit = exits.get(i);
 				ArrayList<Action> movesToThisExit = map.findShortestPath(east, north, exit.x, exit.y, keyCount, false);
@@ -351,7 +385,7 @@ public class SchoolPlayer {
 			return doNextMove(movesToKey.get(0));
 		}
 		if (movesToKey.size() * keyFactor < movesToUnkown.size()){
-			// the key is significantly closer to the unkown and within our margin so go to it
+			// the key is significantly closer to the unknown and within our margin so go to it
 			return doNextMove(movesToKey.get(0));
 		} else {
 			// the key is too far so go explore
@@ -359,7 +393,11 @@ public class SchoolPlayer {
 		}
 	}
 	
-	// executes the next move and correctly updates east and north
+	/**
+	 * executes the next move and correctly updates east and north
+	 * @param move the move that we are about to make
+	 * @return the same move
+	 */
 	private Action doNextMove(Action move){
 		// update east or north
 		if (move == Action.East){
@@ -374,6 +412,10 @@ public class SchoolPlayer {
 		return move;
 	}
 	
+	/**
+	 * Updates the map with all the information we have available to us
+	 * @param vision 
+	 */
 	private void updateMap(final PlayerVision vision){
 		int i, y, x;
 		
@@ -410,6 +452,12 @@ public class SchoolPlayer {
 		
 	}
 	
+	/**
+	 * Adds a point to the map
+	 * @param x The point's x position
+	 * @param y The point's y position
+	 * @param piece Information about the point's type
+	 */
 	private void addToMap(int x, int y, MapBox piece){
 		BoxContainer type;
 		
@@ -417,12 +465,14 @@ public class SchoolPlayer {
 		type = BoxContainer.Open;
 		
 		if (piece.hasKey()){
+			// this is a key so mark it as such and add it to our array
 			type = BoxContainer.Key;
 			Point thisPoint = new Point(x, y, BoxContainer.Key);
 			if (!checkForPointInArr(keys, thisPoint)){ // make sure it's not already in the array
 				keys.add(thisPoint); // add this to our key array
 			}
 		} else if (piece.isEnd()){
+			// this is an exit so mark it as such and add it to our array
 			type = BoxContainer.Exit;
 			Point thisPoint = new Point(x, y, BoxContainer.Exit);
 			if (!checkForPointInArr(exits, thisPoint)){ // make sure it's not already in the array
@@ -457,7 +507,12 @@ public class SchoolPlayer {
 		}
 	}
 	
-	// Checks for a given point in the given array of points. Returns true if it exists otherwise it returns false.
+	/**
+	 * Checks for a given point in the given array of points. Returns true if it exists otherwise it returns false.
+	 * @param array A list of points to check in 
+	 * @param point The point to check for
+	 * @return Whether or not the point exists in the array
+	 */
 	private boolean checkForPointInArr(ArrayList<Point> array, Point point){
 		for (int i = 0; i < array.size(); i++){
 			Point checkPoint = array.get(i);
@@ -467,7 +522,11 @@ public class SchoolPlayer {
 		}
 		return false;
 	}
-	
+	/**
+	 * Casts a BoxType to a BoxContainer
+	 * @param boxType The BoxType to cast
+	 * @return The casted BoxContainer
+	 */
 	private BoxContainer castToBoxContainer(BoxType boxType){
 		if (boxType == BoxType.Blocked){
 			return BoxContainer.Blocked;
