@@ -281,7 +281,7 @@ public class SchoolPlayer {
 		if (lastAction == false){
 			System.out.println("WRONG");
 		}
-		addToMap(east, north, vision.CurrentPoint); // add our current point to our map
+
 		// add everything we can see to our map
 		updateMap(vision);
 		
@@ -345,6 +345,10 @@ public class SchoolPlayer {
 		if (movesToKey.size() == 0){
 			// there are no reachable keys so go explore
 			return doNextMove(movesToUnkown.get(0)); // get going
+		}
+		if (movesToUnkown.size() == 0){
+			//We're walled in, so the only possible way out is get a key to (hopefully) open a door
+			return doNextMove(movesToKey.get(0));
 		}
 		if (movesToKey.size() * keyFactor < movesToUnkown.size()){
 			// the key is significantly closer to the unkown and within our margin so go to it
