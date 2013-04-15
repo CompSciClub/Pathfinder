@@ -168,6 +168,7 @@ public class SchoolPlayer {
 		
 		/**
 		 * Finds the shortest path from the start position to the end position based on our implementation of the A* algorithm
+		 * See http://en.wikipedia.org/wiki/A* for more information about how the algorithim works
 		 * @param startX The x position to start from
 		 * @param startY The y position to start from
 		 * @param endX The x position to end at (this value does not matter if isUnkown == true)
